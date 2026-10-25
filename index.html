@@ -9,8 +9,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,400;1,500&family=Caveat:wght@500;600&display=swap">
 <style>
-/* Layout: one centered evening card — photo, the offered rose, a short note, one button.
-   Taking the rose swaps the note for the invitation out tomorrow. Single deliberate dusk look. */
+/* Layout: one centered evening card — photo, the offered rose, then the invitation out tomorrow
+   with two answers. Single deliberate dusk look. */
 :root {
   --night: #1f1119;
   --wine: #3a1a2a;
@@ -105,37 +105,6 @@ body {
   transform: translate(-3rem, 2rem) rotate(0deg) scale(3.2);
   opacity: 0;
 }
-.letter {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1.4rem;
-  transition: opacity .6s ease;
-}
-.letter.leaving { opacity: 0; }
-.note {
-  display: flex;
-  flex-direction: column;
-  gap: .55rem;
-  max-width: 26rem;
-}
-.note p {
-  margin: 0;
-  font-size: clamp(1.3rem, 4.6vw, 1.6rem);
-  line-height: 1.35;
-  font-style: italic;
-  text-wrap: balance;
-  animation: rise 1s ease-out both;
-}
-.note p:nth-child(1) { animation-delay: 1.8s; }
-.note p:nth-child(2) { animation-delay: 2.5s; }
-.sign {
-  font-family: var(--hand);
-  font-size: 1.9rem;
-  color: var(--petal);
-  margin: 0;
-  animation: rise 1s 3.1s ease-out both;
-}
 button {
   font-family: var(--serif);
   font-size: 1.15rem;
@@ -166,7 +135,7 @@ button:focus-visible { outline: 2px solid var(--petal); outline-offset: 4px; }
   font-style: italic;
   color: var(--muted);
   text-wrap: balance;
-  animation: rise 1s .3s ease-out both;
+  animation: rise 1s 1.8s ease-out both;
 }
 .ask {
   margin: 0;
@@ -176,7 +145,7 @@ button:focus-visible { outline: 2px solid var(--petal); outline-offset: 4px; }
   line-height: 1.1;
   color: var(--blush);
   text-wrap: balance;
-  animation: rise 1s 1s ease-out both;
+  animation: rise 1s 2.5s ease-out both;
 }
 .choices {
   display: flex;
@@ -184,7 +153,6 @@ button:focus-visible { outline: 2px solid var(--petal); outline-offset: 4px; }
   justify-content: center;
   gap: .9rem;
 }
-.choices button { animation-delay: 1.7s; }
 .choices .ghost {
   background: transparent;
   color: var(--blush);
@@ -241,17 +209,7 @@ button:focus-visible { outline: 2px solid var(--petal); outline-offset: 4px; }
     </div>
   </div>
 
-  <div class="letter" id="letter">
-    <div class="note">
-      <p>Puteam să-ți scriu doar „hey”, ca toată lumea.</p>
-      <p>Dar mi s-a părut că un trandafir e un început mai frumos.</p>
-    </div>
-    <p class="sign">— Eduard</p>
-
-    <button id="take" type="button">Ia trandafirul</button>
-  </div>
-
-  <section class="invite" id="invite" hidden>
+  <section class="invite">
     <p class="lead">Și, ca să nu rămână doar un trandafir…</p>
     <h1 class="ask" id="ask">Ieșim mâine în oraș?</h1>
     <div class="choices" id="choices">
@@ -293,7 +251,6 @@ button:focus-visible { outline: 2px solid var(--petal); outline-offset: 4px; }
   }
   document.addEventListener('visibilitychange', watchVisibility);
   watchVisibility();
-  var btn = document.getElementById('take');
   var offer = document.getElementById('offer');
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -322,12 +279,10 @@ button:focus-visible { outline: 2px solid var(--petal); outline-offset: 4px; }
   document.getElementById('ask').textContent =
     diff === 1 || diff === 0 ? 'Ieșim ' + when + ' în oraș?' : 'Ieșim în oraș zilele astea?';
 
-  var letter = document.getElementById('letter');
-  var invite = document.getElementById('invite');
   var choices = document.getElementById('choices');
   var after = document.getElementById('after');
 
-  // Merge și butonul, și apăsarea direct pe trandafir.
+  // Apăsarea pe trandafir îl ia; „Da” îl ia și el, dacă n-a făcut-o deja.
   var taken = false;
   function take() {
     if (taken) return;
@@ -335,27 +290,25 @@ button:focus-visible { outline: 2px solid var(--petal); outline-offset: 4px; }
     offer.classList.add('taken');
     sendOpened();
     notify('A luat trandafirul 🌹');
-    letter.classList.add('leaving');
     petals(28);
-    setTimeout(function () {
-      letter.hidden = true;
-      invite.hidden = false;
-    }, reduce ? 0 : 700);
   }
-  btn.addEventListener('click', take);
   offer.addEventListener('click', take);
 
   var answered = false;
   function answer(yes) {
     if (answered) return;
     answered = true;
+    sendOpened();
     notify(yes ? 'A zis DA 🎉 Ieșiți ' + when + ' în oraș' : 'A zis „altă dată” 🙂');
     choices.hidden = true;
     after.textContent = yes
       ? 'Abia aștept. Îți scriu să stabilim ora. 🌹'
       : 'Nicio grabă. Trandafirul rămâne al tău. 🌹';
     after.hidden = false;
-    if (yes) petals(40);
+    if (yes) {
+      take();
+      petals(40);
+    }
   }
   document.getElementById('yes').addEventListener('click', function () { answer(true); });
   document.getElementById('later').addEventListener('click', function () { answer(false); });
